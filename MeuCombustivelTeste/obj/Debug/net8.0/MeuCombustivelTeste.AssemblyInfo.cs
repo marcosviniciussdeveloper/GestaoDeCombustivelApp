@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MeuCombustivelTeste")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+be2c270f92fa9e3afa47403a5119be51dd7637c0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+44777f9588f0203dbee350f3ae6b8210eca3893e")]
 [assembly: System.Reflection.AssemblyProductAttribute("MeuCombustivelTeste")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MeuCombustivelTeste")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -11,7 +11,7 @@ namespace Meucombustivel.Models
         public Guid Id { get; set; } 
 
         [Column("empresa_id")]
-        public Guid EmpresaId { get; set; } 
+        public Guid? EmpresaId { get; set; } 
 
         [Column("nome")]
         public string Nome { get; set; }                        
