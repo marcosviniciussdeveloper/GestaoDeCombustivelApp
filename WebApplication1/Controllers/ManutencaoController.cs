@@ -1,5 +1,8 @@
-﻿using Meucombustivel.Dtos.Manutencao;
+﻿using System.Data;
+using Meucombustivel.Constants;
+using Meucombustivel.Dtos.Manutencao;
 using Meucombustivel.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -18,6 +21,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPost("registrar")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor + "," + UserRoles.Motorista)]
         public async Task<IActionResult> RegistrarManutencao([FromBody] CreateManutencaoDto dto)
         {
             try
@@ -40,6 +44,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("Buscar varios")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor + "," + UserRoles.Motorista)]
         public async Task<ActionResult<IEnumerable<ReadManutencaoDto>>> GetAllByVeiculoAsync(Guid veiculoId)
         {
             try
@@ -58,6 +63,8 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("Buscar apenas um")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor + "," + UserRoles.Motorista)]
+
         public async Task<ActionResult<ReadManutencaoDto>> GetById(Guid id)
         {
             try
@@ -76,6 +83,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPut("atualizar/{id}")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor + "," + UserRoles.Motorista)]
         public async Task<IActionResult> UpdateManutencao(Guid id, [FromBody] UpdateManutencaoDto dto)
         {
             try

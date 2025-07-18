@@ -1,4 +1,5 @@
-﻿using Meucombustivel.Dtos.Motorista;
+﻿using Meucombustivel.Constants;
+using Meucombustivel.Dtos.Motorista;
 using Meucombustivel.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPost("registrar")]
+        [Authorize(Roles = UserRoles.Gestor + "," +UserRoles.Administrador  )]
         public async Task<IActionResult> RegistrarMotorista(Guid usuarioId, [FromBody] CreateMotoristaDto dto)
         {
             if (!ModelState.IsValid)
@@ -39,6 +41,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("Buscar varios")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
         public async Task<ActionResult<IEnumerable<ReadMotoristaDto>>> GetAllByEmpresaAsync(Guid empresaId)
         {
             var motoristas = await _motoristaService.GetAllByEmpresaAsync(empresaId);
@@ -69,6 +72,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpDelete("deletar/{id}")]
+        [Authorize(Roles = UserRoles.Administrador)]
         public async Task<IActionResult> DeleteMotorista(Guid id)
         {
             var deleted = await _motoristaService.DeleteAsync(id);

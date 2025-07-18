@@ -1,4 +1,5 @@
-﻿using Meucombustivel.Dtos.Veiculo;
+﻿using Meucombustivel.Constants;
+using Meucombustivel.Dtos.Veiculo;
 using Meucombustivel.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPost("registrar")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
         public async Task<IActionResult> RegistrarVeiculo([FromBody] CreateVeiculoDto dto)
         {
             if (!ModelState.IsValid)
@@ -28,6 +30,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("Buscar varios")]
+
         public async Task<ActionResult<IEnumerable<ReadVeiculoDto>>> GetAllByEmpresaAsync(Guid empresaId)
         {
             var veiculos = await _veiculoService.GetAllByEmpresaAsync(empresaId);
@@ -35,6 +38,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("Buscar apenas um")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
         public async Task<ActionResult<ReadVeiculoDto>> GetById(Guid id)
         {
             var veiculo = await _veiculoService.GetByIdAsync(id);
@@ -45,6 +49,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPut("atualizar/{id}")]
+        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
         public async Task<IActionResult> AtualizarVeiculo(Guid id, [FromBody] UpdateVeiculoDto dto)
         {
             if (!ModelState.IsValid)
@@ -55,6 +60,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpDelete("excluir/{id}")]
+        [Authorize(Roles = UserRoles.Administrador )]
         public async Task<IActionResult> ExcluirVeiculo(Guid id)
         {
             await _veiculoService.DeleteAsync(id);

@@ -1,4 +1,5 @@
-﻿using Meucombustivel.Dtos.Empresa;
+﻿using Meucombustivel.Constants;
+using Meucombustivel.Dtos.Empresa;
 using Meucombustivel.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("buscar")]
+        [Authorize(Roles = "Admin"+ "," + "Gestor")]
         public async Task<ActionResult<ReadEmpresaDto>> GetById(Guid id)
         {
             var empresa = await _empresaService.GetByIdAsync(id);
@@ -50,6 +52,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPut("atualizar")]
+        [Authorize(Roles = UserRoles.Administrador + "," + "," + "Gestor")]
         public async Task<IActionResult> AtualizarEmpresa(Guid id, [FromBody] UpdateEmpresaDto dto)
         {
             if (!ModelState.IsValid)
@@ -63,6 +66,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpDelete("deletar")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletarEmpresa(Guid id)
         {
             var deleted = await _empresaService.DeleteAsync(id);
