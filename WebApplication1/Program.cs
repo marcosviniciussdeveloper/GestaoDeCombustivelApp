@@ -8,6 +8,8 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 using WebApplication1.Repositories.Interfaces;
+using WebApplication1.Services;
+using WebApplication1.Services.Interface;
 using WebApplication1.ServicesAuth;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -72,6 +74,8 @@ builder.Services.AddScoped<IManutencaoRepository, ManutencoesRepository>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
 
+
+
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IMotoristaService, MotoristaService>();
@@ -80,6 +84,7 @@ builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddHttpClient<IDashBoardService, DashboardService>();
 
 // ========================
 // Swagger
@@ -114,6 +119,13 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 
 var app = builder.Build();
 
@@ -147,7 +159,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("AllowAll");
 app.MapControllers();
 
 app.Run();

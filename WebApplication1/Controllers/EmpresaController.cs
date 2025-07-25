@@ -26,7 +26,7 @@ namespace Meucombustivel.Controllers
                 return BadRequest(ModelState);
 
             Guid empresaId = await _empresaService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = empresaId }, new { id = empresaId });
+            return CreatedAtAction(nameof(GetById), new { id = empresaId }, new { message = "empresa cadastrada com sucesso!", id = empresaId });
         }
 
         [HttpPost("registrar-com-admin")]

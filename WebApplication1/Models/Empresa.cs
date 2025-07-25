@@ -23,6 +23,9 @@ namespace Meucombustivel.Models
         [Column("email")]
         public string Email { get; set; }
 
+        [Column("senha")]
+        public string Senha { get; set; }
+
         [Column("telefone")]
         public string Telefone { get; set; }
 
