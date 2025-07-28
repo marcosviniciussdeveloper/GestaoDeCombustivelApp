@@ -65,15 +65,6 @@ namespace Meucombustivel.Controllers
             return Ok(new { message = "Empresa atualizada com sucesso." });
         }
 
-        [HttpDelete("deletar")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeletarEmpresa(Guid id)
-        {
-            var deleted = await _empresaService.DeleteAsync(id);
-            if (!deleted)
-                return NotFound(new { message = "Empresa não encontrada." });
-
-            return NoContent();
-        }
+        
     }
 }

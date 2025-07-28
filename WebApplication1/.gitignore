@@ -40,6 +40,9 @@ packages/
 # Rider
 .idea/
 
+appsettings.json
+appsettings.Development.json
+
 # Visual Studio Code
 .vscode/
 

@@ -43,10 +43,13 @@ namespace Meucombustivel.Controllers
 
             var authResponseDto = await _usuarioService.AuthenticateAsync(loginDto.Email, loginDto.Senha); 
             if (authResponseDto == null)
+
             {
                 
                 throw new UnauthorizedException("Credenciais inválidas.");
             }
+
+
 
             return Ok(authResponseDto);
         }
@@ -94,17 +97,5 @@ namespace Meucombustivel.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = UserRoles.Administrador)]
-        public async Task<IActionResult> Delete(Guid id)
-        {
-            bool deleted = await _usuarioService.DeleteAsync(id); 
-            if (!deleted)
-            {
-              
-                throw new NotFoundException($"Usuário com ID {id} não encontrado para exclusão.");
-            }
-            return NoContent();
-        }
     }
 }

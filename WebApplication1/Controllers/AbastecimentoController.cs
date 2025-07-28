@@ -62,16 +62,7 @@ namespace Meucombustivel.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
-        public async Task<ActionResult> DeleteAsync(Guid id)
-        {
-            var deleted = await _abastecimentoService.DeleteAsync(id);
-            if (!deleted)
-                throw new NotFoundException($"Abastecimento com ID {id} não encontrado para exclusão.");
-
-            return NoContent();
-        }
+       
     
     
     }

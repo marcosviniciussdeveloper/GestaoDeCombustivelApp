@@ -59,12 +59,6 @@ namespace Meucombustivel.Controllers
             return NoContent();
         }
 
-        [HttpDelete("excluir/{id}")]
-        [Authorize(Roles = UserRoles.Administrador )]
-        public async Task<IActionResult> ExcluirVeiculo(Guid id)
-        {
-            await _veiculoService.DeleteAsync(id);
-            return NoContent();
-        }
+      
     }
 }

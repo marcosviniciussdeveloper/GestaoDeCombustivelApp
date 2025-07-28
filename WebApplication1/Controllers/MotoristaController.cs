@@ -71,16 +71,7 @@ namespace Meucombustivel.Controllers
             return NoContent();
         }
 
-        [HttpDelete("deletar/{id}")]
-        [Authorize(Roles = UserRoles.Administrador)]
-        public async Task<IActionResult> DeleteMotorista(Guid id)
-        {
-            var deleted = await _motoristaService.DeleteAsync(id);
-            if (!deleted)
-                return NotFound(new { message = "Motorista não encontrado." });
-
-            return NoContent();
-        }
+        
     }
 }
 
