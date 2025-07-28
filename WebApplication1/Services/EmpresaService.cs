@@ -56,7 +56,7 @@ namespace Meucombustivel.Services
         }
 
     
-        public async Task<ReadEmpresaDto?> GetByIdAsync(Guid id)
+        public async Task<ReadEmpresaDto> GetByIdAsync(Guid id)
         {
             var empresa = await _empresaRepository.GetByIdAsync(id); 
             if (empresa == null)
