@@ -41,7 +41,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpGet("buscar")]
-        [Authorize(Roles = "Admin"+ "," + "Gestor")]
+      //  [Authorize(Roles = UserRoles.Administrador + "," + "Gestor")]
         public async Task<ActionResult<ReadEmpresaDto>> GetById(Guid id)
         {
             var empresa = await _empresaService.GetByIdAsync(id);
@@ -52,7 +52,7 @@ namespace Meucombustivel.Controllers
         }
 
         [HttpPut("atualizar")]
-        [Authorize(Roles = UserRoles.Administrador + "," + "," + "Gestor")]
+        [Authorize(Roles = UserRoles.Administrador + "," + "Gestor")]
         public async Task<IActionResult> AtualizarEmpresa(Guid id, [FromBody] UpdateEmpresaDto dto)
         {
             if (!ModelState.IsValid)

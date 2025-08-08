@@ -7,7 +7,7 @@ namespace Meucombustivel.Dtos.Empresa
     /// </summary>
     public class RegisterCompanyAndAdminDto
     {
-       
+
         [Required(ErrorMessage = "Razão Social é obrigatória.")]
         [StringLength(255, ErrorMessage = "Razão Social não pode exceder 255 caracteres.")]
         public string RazaoSocial { get; set; }
