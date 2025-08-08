@@ -74,7 +74,13 @@ builder.Services.AddScoped<IManutencaoRepository, ManutencoesRepository>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        builder => builder.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
 
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
