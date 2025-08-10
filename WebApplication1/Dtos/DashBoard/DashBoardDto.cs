@@ -1,4 +1,4 @@
-﻿using Castle.Components.DictionaryAdapter;
+﻿// remova o using Castle.Components.DictionaryAdapter; (não é necessário)
 
 public class DashboardDto
 {
@@ -29,8 +29,17 @@ public class DashboardDto
     public class DashboardMensalDto
     {
         public string Mes { get; set; } = string.Empty;
-        public decimal Economia { get; set; } 
-        public decimal Gasto { get; set; }
-    }
 
+        
+        public decimal TotalCusto { get; set; }     
+        public decimal TotalLitros { get; set; }
+
+        public decimal Gasto
+        {
+            get => TotalCusto;
+            set => TotalCusto = value;
+        }
+
+        public decimal Economia { get; set; }
+    }
 }

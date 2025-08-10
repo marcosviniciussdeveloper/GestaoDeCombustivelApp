@@ -31,6 +31,11 @@ var supabaseAnonKey = builder.Configuration["Supabase:AnonKey"]
 
 builder.Services.AddSingleton(provider => new Supabase.Client(supabaseUrl, supabaseAnonKey));
 
+// Bind para opções usadas no DashboardService (Url/ApiKey)
+builder.Services.Configure<WebApplication1.Services.SupabaseSettings>(
+    builder.Configuration.GetSection("Supabase")
+);
+
 // ========================
 // JWT
 // ========================
@@ -73,7 +78,6 @@ builder.Services.AddScoped<IEmpresaRepository, EmpresaRepository>();
 builder.Services.AddScoped<IManutencaoRepository, ManutencoesRepository>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -90,15 +94,23 @@ builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+// HttpClient para o DashboardService apontando para /rest/v1
 builder.Services.AddHttpClient<IDashBoardService, DashboardService>((sp, client) =>
 {
     var config = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = config["Supabase:Url"];
-    if (!baseUrl.EndsWith("/"))
-        baseUrl += "/";
+    var baseUrl = config["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+
+    // Garante sufixo /rest/v1 e barra final
+    if (!baseUrl.EndsWith("/")) baseUrl += "/";
+    if (!baseUrl.Contains("/rest/v1"))
+    {
+        // Se veio só o host, adiciona /rest/v1
+        baseUrl = baseUrl.TrimEnd('/') + "/rest/v1/";
+    }
+
     client.BaseAddress = new Uri(baseUrl);
 });
-
 
 // ========================
 // Swagger
