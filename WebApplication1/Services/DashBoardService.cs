@@ -32,10 +32,10 @@ namespace WebApplication1.Services
             string baseUrl = _supabase.Url;
             string filtroEmpresa = empresaId.HasValue ? $"&empresa_id=eq.{empresaId}" : string.Empty;
 
-            var abastecimentos = await _http.GetFromJsonAsync<List<JsonElement>>($"{baseUrl}/abastecimentos?select=*&limit=10000{filtroEmpresa}");
-            var manutencoes = await _http.GetFromJsonAsync<List<JsonElement>>($"{baseUrl}/manutencoes?select=*&limit=10000{filtroEmpresa}");
-            var veiculos = await _http.GetFromJsonAsync<List<JsonElement>>($"{baseUrl}/veiculos?select=*&limit=10000{filtroEmpresa}");
-            var motoristas = await _http.GetFromJsonAsync<List<JsonElement>>($"{baseUrl}/motoristas?select=*&limit=10000{filtroEmpresa}");
+            var abastecimentos = await _http.GetFromJsonAsync<List<JsonElement>>($"/abastecimentos?select=*&limit=10000{filtroEmpresa}");
+            var manutencoes = await _http.GetFromJsonAsync<List<JsonElement>>($"manutencoes?select=*&limit=10000{filtroEmpresa}");
+            var veiculos = await _http.GetFromJsonAsync<List<JsonElement>>($"/veiculos?select=*&limit=10000{filtroEmpresa}");
+            var motoristas = await _http.GetFromJsonAsync<List<JsonElement>>($"/motoristas?select=*&limit=10000{filtroEmpresa}");
 
             DateTime now = DateTime.UtcNow;
             DateTime inicioMes = new DateTime(now.Year, now.Month, 1);
@@ -130,7 +130,7 @@ namespace WebApplication1.Services
             string baseUrl = _supabase.Url;
             string filtroEmpresa = empresaId.HasValue ? $"&empresa_id=eq.{empresaId}" : string.Empty;
 
-            var abastecimentos = await _http.GetFromJsonAsync<List<JsonElement>>($"{baseUrl}/abastecimentos?select=*&limit=10000{filtroEmpresa}");
+            var abastecimentos = await _http.GetFromJsonAsync<List<JsonElement>>($"bastecimentos?select=*&limit=10000{filtroEmpresa}");
 
             Func<JsonElement, DateTime?> getDate = (item) =>
             {

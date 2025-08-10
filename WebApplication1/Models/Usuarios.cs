@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.AspNetCore.Components.Routing;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
@@ -29,5 +30,14 @@ namespace Meucombustivel.Models
         public Guid IdAuth { get; set; } 
 
      
+        public enum TipoUsuarioEnum
+        {
+            Administrador,
+            Motorista,
+            Gerente,
+            Funcionario
+        }
+
+
     }
 }

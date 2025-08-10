@@ -90,7 +90,15 @@ builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddHttpClient<IDashBoardService, DashboardService>();
+builder.Services.AddHttpClient<IDashBoardService, DashboardService>((sp, client) =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = config["Supabase:Url"];
+    if (!baseUrl.EndsWith("/"))
+        baseUrl += "/";
+    client.BaseAddress = new Uri(baseUrl);
+});
+
 
 // ========================
 // Swagger
