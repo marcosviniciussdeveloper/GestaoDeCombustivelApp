@@ -78,14 +78,6 @@ builder.Services.AddScoped<IEmpresaRepository, EmpresaRepository>();
 builder.Services.AddScoped<IManutencaoRepository, ManutencoesRepository>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll",
-        builder => builder.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
-});
-
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IMotoristaService, MotoristaService>();
@@ -94,22 +86,22 @@ builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-
-// HttpClient para o DashboardService apontando para /rest/v1
 builder.Services.AddHttpClient<IDashBoardService, DashboardService>((sp, client) =>
 {
-    var config = sp.GetRequiredService<IConfiguration>();
-    var baseUrl = config["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+    var cfg = sp.GetRequiredService<IConfiguration>();
 
-    // Garante sufixo /rest/v1 e barra final
+    var baseUrl = cfg["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+    var anonKey = cfg["Supabase:AnonKey"] ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+
+    // BaseAddress correto: .../rest/v1/
     if (!baseUrl.EndsWith("/")) baseUrl += "/";
-    if (!baseUrl.Contains("/rest/v1"))
-    {
-        // Se veio só o host, adiciona /rest/v1
-        baseUrl = baseUrl.TrimEnd('/') + "/rest/v1/";
-    }
+    client.BaseAddress = new Uri($"{baseUrl}rest/v1/");
 
-    client.BaseAddress = new Uri(baseUrl);
+    // Credenciais exigidas pelo Supabase
+    client.DefaultRequestHeaders.Clear();
+    client.DefaultRequestHeaders.Add("apikey", anonKey);
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", anonKey);
 });
 
 // ========================
@@ -184,8 +176,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseAuthentication();
-app.UseAuthorization();
 app.UseCors("AllowAll");
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
