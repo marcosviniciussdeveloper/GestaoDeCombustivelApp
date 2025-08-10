@@ -113,21 +113,26 @@ namespace Meucombustivel.Services
         {
             var motorista = await _motoristaRepository.GetByIdAsync(id);
             if (motorista == null)
-            {
                 throw new NotFoundException($"Motorista com ID {id} não encontrado.");
-            }
+
 
             var usuario = await _usuarioRepository.GetByIdAsync(motorista.UsuarioId);
+
+
             var motoristaDto = _mapper.Map<ReadMotoristaDto>(motorista);
+
+
             if (usuario != null)
             {
                 motoristaDto.Nome = usuario.Nome;
-                motoristaDto.Cpf = usuario.Cpf;
                 motoristaDto.Email = usuario.Email;
+                motoristaDto.Cpf = usuario.Cpf;
             }
+
 
             return motoristaDto;
         }
+
 
 
         public async Task<Guid> ResgisterNewDriverAsync(RegisterMotoristaDto dto)
@@ -179,7 +184,7 @@ namespace Meucombustivel.Services
                 Email = dto.Email,
             };
 
-            await _usuarioService.UpdateAsync(id, userUpdateDto);  
+            await _usuarioService.UpdateAsync(id, userUpdateDto);
 
             _mapper.Map(dto, existingMotoristaProfile);
             await _motoristaRepository.UpdateAsync(existingMotoristaProfile);

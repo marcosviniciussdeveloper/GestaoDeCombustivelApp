@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using WebApplication1.Repositories;
 using WebApplication1.Repositories.Interfaces;
 using WebApplication1.Services;
 using WebApplication1.Services.Interface;
@@ -77,8 +78,10 @@ builder.Services.AddScoped<IAbastecimentoRepository, AbastecimentoRepository>();
 builder.Services.AddScoped<IEmpresaRepository, EmpresaRepository>();
 builder.Services.AddScoped<IManutencaoRepository, ManutencoesRepository>();
 builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
+builder.Services.AddScoped<IEmpresaMotoristaRepository, EmpresaMotoristaRepository>();
 
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IEmpresaMotoristaService, EmpresaMotoristaService>();    
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IMotoristaService, MotoristaService>();
 builder.Services.AddScoped<IAbastecimentoService, AbastecimentoService>();

@@ -16,6 +16,8 @@ namespace Meucombustivel.Repositories.Interfaces
         /// <returns>O objeto Usuarios encontrado ou null se não existir.</returns>
         Task<Usuarios?> GetByEmailAsync(string email);
 
-        
+     
+
+
     }
 }

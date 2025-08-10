@@ -1,5 +1,7 @@
-﻿using Meucombustivel.Models;
+﻿using Meucombustivel.Dtos.Motorista;
+using Meucombustivel.Models;
 using Meucombustivel.Repositories.Interfaces;
+using WebApplication1.Models.View;
 
 
 namespace Meucombustivel.Repositories
@@ -17,7 +19,7 @@ namespace Meucombustivel.Repositories
         {
             var response = await _supabaseClient.From<Motorista>().Insert(entity);
 
-           
+
             if (response.ResponseMessage.IsSuccessStatusCode && response.Models.Any())
             {
                 return response.Models.First();
@@ -29,7 +31,7 @@ namespace Meucombustivel.Repositories
                 {
                     errorMessage += $"Detalhes: {await response.ResponseMessage.Content.ReadAsStringAsync()}";
                 }
-              
+
                 if (response.ResponseMessage.IsSuccessStatusCode && !response.Models.Any())
                 {
                     errorMessage = "Erro de inserção: Supabase indicou sucesso, mas nenhum registro foi retornado. Verifique constraints ou RLS.";
@@ -55,7 +57,7 @@ namespace Meucombustivel.Repositories
         {
             var response = await _supabaseClient.From<Motorista>()
                                                  .Where(m => m.UsuarioId == id)
-                                                 .Get();    
+                                                 .Get();
             return response.Models.FirstOrDefault();
         }
 
@@ -73,5 +75,27 @@ namespace Meucombustivel.Repositories
                                                  .Get();
             return response.Models.FirstOrDefault();
         }
+
+        public async Task<IReadOnlyList<ReadMotoristaDto>> ListarPorEmpresaAsync(Guid empresaId)
+        {
+            var resp = await _supabaseClient
+                .From<VwMotoristaEmpresa>()
+                .Where(v => v.EmpresaId == empresaId)
+                .Order(v => v.Nome!, Supabase.Postgrest.Constants.Ordering.Ascending)
+                .Get();
+
+            return resp.Models.Select(v => new ReadMotoristaDto
+            {
+                MotoristaId = v.MotoristaId,
+                Nome = v.Nome,
+                Email = v.Email,
+                Cpf = v.Cpf,
+                NumeroCnh = v.NumeroCnh,
+                ValidadeCnh = v.ValidadeCnh,
+                CategoriaCnh = v.CategoriaCnh,
+                StatusVinculo = v.Status ?? "ativo"
+            }).ToList();
+        }
+
     }
 }

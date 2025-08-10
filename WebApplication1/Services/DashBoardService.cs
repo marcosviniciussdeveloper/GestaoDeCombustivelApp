@@ -1,11 +1,14 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Net.Http.Json;
+using System.Text.Json;
 using Meucombustivel.Models;
-using Microsoft.Extensions.Options;
 using WebApplication1.Services.Interface;
 using static DashboardDto;
 
 namespace WebApplication1.Services
 {
+    // Mantido apenas porque seu Program faz Configure<SupabaseSettings>,
+    // mas o Service NÃO usa mais ApiKey/Url (isso fica no Program).
     public class SupabaseSettings
     {
         public string Url { get; set; } = string.Empty;
@@ -15,24 +18,49 @@ namespace WebApplication1.Services
     public class DashboardService : IDashBoardService
     {
         private readonly HttpClient _http;
-        private readonly SupabaseSettings _supabase;
 
-        public DashboardService(HttpClient http, IOptions<SupabaseSettings> supabaseOptions)
+        // Agora só injeta o HttpClient; headers e BaseAddress ficam no Program.cs
+        public DashboardService(HttpClient http)
         {
             _http = http;
-            _supabase = supabaseOptions.Value;
-
-            // evita duplicar headers se o HttpClient for reutilizado
-            _http.DefaultRequestHeaders.Remove("apikey");
-            _http.DefaultRequestHeaders.Remove("Authorization");
-            _http.DefaultRequestHeaders.Add("apikey", _supabase.ApiKey);
-            _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_supabase.ApiKey}");
         }
 
-        // helper para montar query e buscar lista no Supabase
+        // ------------------------- Helpers -------------------------
+
+        private static DateTime? GetDate(JsonElement item)
+        {
+            if (item.TryGetProperty("data", out var dateProp) && dateProp.ValueKind == JsonValueKind.String)
+            {
+                if (DateTime.TryParse(dateProp.GetString(), out var dt)) return dt;
+            }
+            return null;
+        }
+
+        private static decimal GetDecimal(JsonElement e, string prop)
+        {
+            if (!e.TryGetProperty(prop, out var v)) return 0m;
+            return v.ValueKind switch
+            {
+                JsonValueKind.Number => v.GetDecimal(),
+                JsonValueKind.String => decimal.TryParse(v.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var d) ? d : 0m,
+                _ => 0m
+            };
+        }
+
+        private static int CountIn(IEnumerable<JsonElement> list, DateTime start, DateTime end) =>
+            list.Count(e => { var dt = GetDate(e); return dt.HasValue && dt.Value >= start && dt.Value <= end; });
+
+        private static decimal SumIn(IEnumerable<JsonElement> list, DateTime start, DateTime end, string campo) =>
+            list.Where(e => { var dt = GetDate(e); return dt.HasValue && dt.Value >= start && dt.Value <= end; })
+                .Select(e => GetDecimal(e, campo))
+                .Sum();
+
+        // ---------------------- Supabase Fetch ----------------------
+        // aplicarFiltroData: use TRUE apenas em tabelas que possuam coluna "data"
         private async Task<List<JsonElement>> FetchAsync(
             string table,
             bool aplicarFiltroEmpresa,
+            bool aplicarFiltroData,
             Guid? empresaId,
             DateTime? de,
             DateTime? ate)
@@ -42,9 +70,11 @@ namespace WebApplication1.Services
             if (aplicarFiltroEmpresa && empresaId.HasValue)
                 qs.Add($"empresa_id=eq.{empresaId}");
 
-            // filtros de período por coluna "data" (quando existir)
-            if (de.HasValue) qs.Add($"data=gte.{de.Value.ToUniversalTime():O}");
-            if (ate.HasValue) qs.Add($"data=lte.{ate.Value.ToUniversalTime():O}");
+            if (aplicarFiltroData)
+            {
+                if (de.HasValue) qs.Add($"data=gte.{de.Value.ToUniversalTime():O}");
+                if (ate.HasValue) qs.Add($"data=lte.{ate.Value.ToUniversalTime():O}");
+            }
 
             var url = $"{table}?{string.Join("&", qs)}";
 
@@ -54,72 +84,63 @@ namespace WebApplication1.Services
             }
             catch
             {
-                // se falhar por coluna inexistente (ex.: empresa_id não existe em motoristas), tenta sem o filtro de empresa
-                if (aplicarFiltroEmpresa)
-                {
-                    var semEmpresa = qs.Where(p => !p.StartsWith("empresa_id=", StringComparison.OrdinalIgnoreCase)).ToList();
-                    url = $"{table}?{string.Join("&", semEmpresa)}";
-                    return await _http.GetFromJsonAsync<List<JsonElement>>(url) ?? new List<JsonElement>();
-                }
-                throw;
+                // Retry defensivo: remove filtros que podem não existir nesta tabela
+                var qsRetry = qs
+                    .Where(p =>
+                        !p.StartsWith("empresa_id=", StringComparison.OrdinalIgnoreCase) &&
+                        !p.StartsWith("data=gte.", StringComparison.OrdinalIgnoreCase) &&
+                        !p.StartsWith("data=lte.", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                url = $"{table}?{string.Join("&", qsRetry)}";
+                return await _http.GetFromJsonAsync<List<JsonElement>>(url) ?? new List<JsonElement>();
             }
         }
 
-        public async Task<DashboardDto> ObterDashboardAsync(Guid? empresaId = null, DateTime? de = null, DateTime? ate = null)
+        // --------------------- Dashboard (KPIs) ---------------------
+        public async Task<DashboardDto> ObterDashboardAsync(
+            Guid? empresaId = null, DateTime? de = null, DateTime? ate = null)
         {
-            // busca dados (usa BaseAddress; paths relativos)
-            var abastecimentos = await FetchAsync("abastecimentos", aplicarFiltroEmpresa: true, empresaId, de, ate);
-            var manutencoes    = await FetchAsync("manutencoes",    aplicarFiltroEmpresa: true, empresaId, de, ate);
-            var veiculos       = await FetchAsync("veiculos",       aplicarFiltroEmpresa: true, empresaId, de, ate);
-            var motoristas     = await FetchAsync("motoristas",     aplicarFiltroEmpresa: false, empresaId, de, ate);
+            // Tabelas COM coluna "data"
+            var abastecimentos = await FetchAsync("abastecimentos", aplicarFiltroEmpresa: true, aplicarFiltroData: true, empresaId, de, ate);
+            var manutencoes    = await FetchAsync("manutencoes",    aplicarFiltroEmpresa: true, aplicarFiltroData: true, empresaId, de, ate);
 
-            DateTime now = DateTime.UtcNow;
-            DateTime inicioMes    = new DateTime(now.Year, now.Month, 1);
-            DateTime inicioSemana = now.AddDays(-7);
-            DateTime inicioAno    = new DateTime(now.Year, 1, 1);
+            // Tabelas SEM coluna "data"
+            var veiculos   = await FetchAsync("veiculos",   aplicarFiltroEmpresa: true,  aplicarFiltroData: false, empresaId, de, ate);
+            var motoristas = await FetchAsync("motoristas", aplicarFiltroEmpresa: false, aplicarFiltroData: false, empresaId, de, ate);
 
-            DateTime? GetDate(JsonElement item)
-            {
-                if (item.TryGetProperty("data", out var dateProp) && dateProp.ValueKind == JsonValueKind.String)
-                    return DateTime.TryParse(dateProp.GetString(), out var dt) ? dt : null;
-                return null;
-            }
-
-            int CountIn(IEnumerable<JsonElement> list, DateTime start, DateTime end) =>
-                list.Count(e => { var dt = GetDate(e); return dt.HasValue && dt >= start && dt <= end; });
-
-            decimal SumIn(IEnumerable<JsonElement> list, DateTime start, DateTime end, string campo) =>
-                list.Where(e => { var dt = GetDate(e); return dt.HasValue && dt >= start && dt <= end; })
-                    .Select(e => e.TryGetProperty(campo, out var v) ? v.GetDecimal() : 0m)
-                    .Sum();
+            var now          = DateTime.UtcNow;
+            var inicioMes    = new DateTime(now.Year, now.Month, 1);
+            var inicioSemana = now.AddDays(-7);
+            var inicioAno    = new DateTime(now.Year, 1, 1);
 
             const decimal precoMedioMercado = 6.00m;
 
-            decimal litrosMes     = SumIn(abastecimentos, inicioMes,    now, "litros");
-            decimal litrosDia     = SumIn(abastecimentos, now.Date,     now, "litros");
-            decimal litrosSemana  = SumIn(abastecimentos, inicioSemana, now, "litros");
-            decimal litrosAno     = SumIn(abastecimentos, inicioAno,    now, "litros");
-            decimal litrosTotal   = SumIn(abastecimentos, DateTime.MinValue, now, "litros");
+            var litrosMes     = SumIn(abastecimentos, inicioMes,    now, "litros");
+            var litrosDia     = SumIn(abastecimentos, now.Date,     now, "litros");
+            var litrosSemana  = SumIn(abastecimentos, inicioSemana, now, "litros");
+            var litrosAno     = SumIn(abastecimentos, inicioAno,    now, "litros");
+            var litrosTotal   = SumIn(abastecimentos, DateTime.MinValue, now, "litros");
 
-            decimal custoRealMes     = SumIn(abastecimentos, inicioMes,    now, "custo");
-            decimal custoRealDia     = SumIn(abastecimentos, now.Date,     now, "custo");
-            decimal custoRealSemana  = SumIn(abastecimentos, inicioSemana, now, "custo");
-            decimal custoRealAno     = SumIn(abastecimentos, inicioAno,    now, "custo");
-            decimal custoRealTotal   = SumIn(abastecimentos, DateTime.MinValue, now, "custo");
+            var custoMes      = SumIn(abastecimentos, inicioMes,    now, "custo");
+            var custoDia      = SumIn(abastecimentos, now.Date,     now, "custo");
+            var custoSemana   = SumIn(abastecimentos, inicioSemana, now, "custo");
+            var custoAno      = SumIn(abastecimentos, inicioAno,    now, "custo");
+            var custoTotal    = SumIn(abastecimentos, DateTime.MinValue, now, "custo");
 
             var dto = new DashboardDto
             {
-                EconomiaTotal   = litrosTotal  * precoMedioMercado - custoRealTotal,
-                EconomiaMensal  = litrosMes    * precoMedioMercado - custoRealMes,
-                EconomiaDiaria  = litrosDia    * precoMedioMercado - custoRealDia,
-                EconomiaSemanal = litrosSemana * precoMedioMercado - custoRealSemana,
-                EconomiaAnual   = litrosAno    * precoMedioMercado - custoRealAno,
+                EconomiaTotal   = litrosTotal  * precoMedioMercado - custoTotal,
+                EconomiaMensal  = litrosMes    * precoMedioMercado - custoMes,
+                EconomiaDiaria  = litrosDia    * precoMedioMercado - custoDia,
+                EconomiaSemanal = litrosSemana * precoMedioMercado - custoSemana,
+                EconomiaAnual   = litrosAno    * precoMedioMercado - custoAno,
 
                 Abastecimentos        = abastecimentos?.Count ?? 0,
                 AbastecimentosMensal  = CountIn(abastecimentos, inicioMes,    now),
                 AbastecimentosDiario  = CountIn(abastecimentos, now.Date,     now),
-                AbastecimentosAnual   = CountIn(abastecimentos, inicioAno,    now),
                 AbastecimentosSemanal = CountIn(abastecimentos, inicioSemana, now),
+                AbastecimentosAnual   = CountIn(abastecimentos, inicioAno,    now),
 
                 Manutencao        = manutencoes?.Count ?? 0,
                 ManutencaoMensal  = CountIn(manutencoes, inicioMes,    now),
@@ -127,8 +148,8 @@ namespace WebApplication1.Services
                 ManutencaoSemanal = CountIn(manutencoes, inicioSemana, now),
                 ManutencaoAnual   = CountIn(manutencoes, inicioAno,    now),
 
-                VeiculosTotal   = veiculos?.Count ?? 0,
-                VeiculosAtivos  = veiculos?.Count ?? 0, // ajuste aqui caso tenha coluna de status
+                VeiculosTotal    = veiculos?.Count ?? 0,
+                VeiculosAtivos   = veiculos?.Count ?? 0, // ajuste quando tiver coluna de status
                 VeiculosInativos = 0,
 
                 MotoristasAtivos = motoristas?.Count ?? 0
@@ -137,39 +158,76 @@ namespace WebApplication1.Services
             return dto;
         }
 
-        public async Task<List<DashboardMensalDto>> ObterDadosMensaisAsync(Guid? empresaId = null)
+        // ------------------- Dashboard (Mensal c/ range) -------------------
+        public async Task<List<DashboardMensalDto>> ObterDadosMensaisAsync(
+            Guid? empresaId = null, DateOnly? de = null, DateOnly? ate = null)
         {
-            var abastecimentos = await FetchAsync("abastecimentos", aplicarFiltroEmpresa: true, empresaId, de: null, ate: null);
+            // range padrão: últimos 6 meses (inclui mês atual)
+            var hoje = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var ini = de  ?? new DateOnly(hoje.Year, hoje.Month, 1).AddMonths(-5);
+            var fim = ate ?? new DateOnly(hoje.Year, hoje.Month, 1);
+            if (ini > fim) (ini, fim) = (fim, ini);
 
-            DateTime? GetDate(JsonElement item)
+            var dtIni = ini.ToDateTime(TimeOnly.MinValue);
+            var dtFim = fim.ToDateTime(TimeOnly.MaxValue);
+
+            // Abastecimentos têm coluna "data" -> aplicarFiltroData = true
+            var abastecimentos = await FetchAsync(
+                "abastecimentos",
+                aplicarFiltroEmpresa: true,
+                aplicarFiltroData:   true,
+                empresaId, dtIni, dtFim);
+
+            // cria meses do intervalo com zeros (para o gráfico não quebrar)
+            var culturaPtBr = new CultureInfo("pt-BR");
+            var meses = new List<DashboardMensalDto>();
+            for (var d = new DateOnly(ini.Year, ini.Month, 1);
+                 d <= new DateOnly(fim.Year, fim.Month, 1);
+                 d = d.AddMonths(1))
             {
-                if (item.TryGetProperty("data", out var dateProp) && dateProp.ValueKind == JsonValueKind.String)
-                    return DateTime.TryParse(dateProp.GetString(), out var dt) ? dt : null;
-                return null;
+                meses.Add(new DashboardMensalDto
+                {
+                    Mes         = d.ToString("MMM", culturaPtBr),
+                    TotalCusto  = 0m,
+                    TotalLitros = 0m,
+                    Economia    = 0m
+                });
             }
 
-            var dadosPorMes = abastecimentos
-                .Where(e => GetDate(e).HasValue)
-                .GroupBy(e => GetDate(e)!.Value.ToString("yyyy-MM"))
-                .OrderBy(g => g.Key)
-                .Select(g =>
-                {
-                    var mes = DateTime.ParseExact(g.Key, "yyyy-MM", null);
-                    var totalLitros = g.Select(e => e.TryGetProperty("litros", out var l) ? l.GetDecimal() : 0m).Sum();
-                    var totalGasto  = g.Select(e => e.TryGetProperty("custo",  out var c) ? c.GetDecimal() : 0m).Sum();
-                    const decimal precoMedioMercado = 6.00m;
+            // mapa yyyy-MM -> índice
+            var primeiro = new DateTime(ini.Year, ini.Month, 1);
+            var map = meses
+                .Select((_, i) => new { Key = primeiro.AddMonths(i).ToString("yyyy-MM"), Idx = i })
+                .ToDictionary(x => x.Key, x => x.Idx);
 
-                    return new DashboardMensalDto
-                    {
-                        Mes      = mes.ToString("MMM", new System.Globalization.CultureInfo("pt-BR")),
-                        TotalCusto    = totalGasto,
-                        TotalLitros = totalLitros,
-                        Economia = totalLitros * precoMedioMercado - totalGasto
-                    };
-                })
-                .ToList();
+            const decimal precoMedioMercado = 6.00m;
 
-            return dadosPorMes;
+            // agrega dados reais
+            var grupos = abastecimentos
+                .Select(e => new { Dt = GetDate(e), Litros = GetDecimal(e, "litros"), Custo = GetDecimal(e, "custo") })
+                .Where(x => x.Dt.HasValue && x.Dt.Value >= dtIni && x.Dt.Value <= dtFim)
+                .GroupBy(x => x.Dt!.Value.ToString("yyyy-MM"));
+
+            foreach (var g in grupos)
+            {
+                if (!map.TryGetValue(g.Key, out var i)) continue;
+                var litros = g.Sum(x => x.Litros);
+                var custo  = g.Sum(x => x.Custo);
+                meses[i].TotalLitros = litros;
+                meses[i].TotalCusto  = custo;
+                meses[i].Economia    = litros * precoMedioMercado - custo;
+            }
+
+            return meses;
+        }
+
+        // (Opcional) overload sem range para compatibilidade
+        public async Task<List<DashboardMensalDto>> ObterDadosMensaisAsync(Guid? empresaId = null)
+        {
+            var hoje = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var de  = new DateOnly(hoje.Year, hoje.Month, 1).AddMonths(-5);
+            var ate = new DateOnly(hoje.Year, hoje.Month, 1);
+            return await ObterDadosMensaisAsync(empresaId, de, ate);
         }
     }
 }

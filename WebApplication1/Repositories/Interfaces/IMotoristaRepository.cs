@@ -1,4 +1,5 @@
-﻿using Meucombustivel.Models; // Importa a sua Model Motorista
+﻿using Meucombustivel.Dtos.Motorista;
+using Meucombustivel.Models; // Importa a sua Model Motorista
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ namespace Meucombustivel.Repositories.Interfaces
         /// <param name="usuarioId">O ID do usuário associado ao motorista.</param>
         /// <returns>O objeto Motorista encontrado ou null se não existir.</returns>
         Task<Motorista?> GetByUsuarioIdAsync(Guid usuarioId);
+
+        Task<IReadOnlyList<ReadMotoristaDto>> ListarPorEmpresaAsync(Guid empresaId);
 
    
     }
