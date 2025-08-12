@@ -15,7 +15,6 @@ using WebApplication1.ServicesAuth;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configura leitura de arquivos JSON por ambiente
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -25,12 +24,19 @@ builder.Configuration
 // ========================
 // Configurações Supabase
 // ========================
-var supabaseUrl = builder.Configuration["Supabase:Url"]
-    ?? throw new InvalidOperationException("Supabase:Url is not configured.");
-var supabaseAnonKey = builder.Configuration["Supabase:AnonKey"]
-    ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+var supabaseUrl       = builder.Configuration["Supabase:Url"]             ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+var supabaseAnonKey   = builder.Configuration["Supabase:AnonKey"]         ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+var supabaseServiceKey= builder.Configuration["Supabase:ServiceRoleKey"]  ?? throw new InvalidOperationException("Supabase:ServiceRoleKey is not configured.");
 
-builder.Services.AddSingleton(provider => new Supabase.Client(supabaseUrl, supabaseAnonKey));
+builder.Services.AddSingleton(_ =>
+    new Supabase.Client(
+        supabaseUrl,
+        supabaseServiceKey,
+        new Supabase.SupabaseOptions
+        {
+            AutoRefreshToken = false
+        })
+);
 
 // Bind para opções usadas no DashboardService (Url/ApiKey)
 builder.Services.Configure<WebApplication1.Services.SupabaseSettings>(
@@ -40,25 +46,22 @@ builder.Services.Configure<WebApplication1.Services.SupabaseSettings>(
 // ========================
 // JWT
 // ========================
-var jwtKey = builder.Configuration["Jwt:Key"]
-    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"]
-    ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
-var jwtAudience = builder.Configuration["Jwt:Audience"]
-    ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
+var jwtKey      = builder.Configuration["Jwt:Key"]      ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+var jwtIssuer   = builder.Configuration["Jwt:Issuer"]   ?? throw new InvalidOperationException("Jwt:Issuer is not configured.");
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+            ValidIssuer              = jwtIssuer,
+            ValidAudience            = jwtAudience,
+            IssuerSigningKey         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -81,7 +84,7 @@ builder.Services.AddScoped<IVeiculoRepository, VeiculoRepository>();
 builder.Services.AddScoped<IEmpresaMotoristaRepository, EmpresaMotoristaRepository>();
 
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
-builder.Services.AddScoped<IEmpresaMotoristaService, EmpresaMotoristaService>();    
+builder.Services.AddScoped<IEmpresaMotoristaService, EmpresaMotoristaService>();
 builder.Services.AddScoped<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<IMotoristaService, MotoristaService>();
 builder.Services.AddScoped<IAbastecimentoService, AbastecimentoService>();
@@ -89,22 +92,22 @@ builder.Services.AddScoped<IManutencaoService, ManutencaoService>();
 builder.Services.AddScoped<IVeiculoService, VeiculoService>();
 builder.Services.AddScoped<IEmpresaService, EmpresaService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+
 builder.Services.AddHttpClient<IDashBoardService, DashboardService>((sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
 
-    var baseUrl = cfg["Supabase:Url"] ?? throw new InvalidOperationException("Supabase:Url is not configured.");
-    var anonKey = cfg["Supabase:AnonKey"] ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+    var baseUrl   = cfg["Supabase:Url"]            ?? throw new InvalidOperationException("Supabase:Url is not configured.");
+    var anonKey   = cfg["Supabase:AnonKey"]        ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
+    var serviceKey= cfg["Supabase:ServiceRoleKey"] ?? throw new InvalidOperationException("Supabase:ServiceRoleKey is not configured.");
 
-    // BaseAddress correto: .../rest/v1/
     if (!baseUrl.EndsWith("/")) baseUrl += "/";
     client.BaseAddress = new Uri($"{baseUrl}rest/v1/");
 
-    // Credenciais exigidas pelo Supabase
     client.DefaultRequestHeaders.Clear();
     client.DefaultRequestHeaders.Add("apikey", anonKey);
     client.DefaultRequestHeaders.Authorization =
-        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", anonKey);
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", serviceKey);
 });
 
 // ========================
@@ -133,7 +136,7 @@ builder.Services.AddSwaggerGen(c =>
                     Id = "Bearer"
                 }
             },
-            new string[] {}
+            Array.Empty<string>()
         }
     });
 });
@@ -143,16 +146,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder => builder.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
 
 var app = builder.Build();
 
-// ========================
-// Pipeline de requisição
-// ========================
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -163,7 +163,6 @@ else
     app.UseHsts();
 }
 
-// Swagger disponível também em produção
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();

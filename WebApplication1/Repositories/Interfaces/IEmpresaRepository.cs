@@ -14,5 +14,7 @@ namespace Meucombustivel.Repositories.Interfaces
      
         Task<Empresa?> GetByCnpjAsync(string cnpj);
 
+         Task<Empresa?> GetByUuidAsync(Guid uuid);
+
     }
 }

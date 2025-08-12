@@ -11,7 +11,7 @@ namespace Meucombustivel.Repositories
     {
         private readonly Supabase.Client _supabaseClient;
 
-        public UsuarioRepository(Supabase.Client supabaseClient)
+        public UsuarioRepository(Supabase.Client supabaseClient) 
         {
             _supabaseClient = supabaseClient;
         }

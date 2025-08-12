@@ -62,5 +62,14 @@ namespace Meucombustivel.Repositories
                                                  .Get();
             return response.Models.FirstOrDefault();
         }
+
+        public async Task<Empresa?> GetByUuidAsync(Guid uuid)
+        {
+            var resp = await _supabaseClient.From<Empresa>()
+                .Filter("uuid", Supabase.Postgrest.Constants.Operator.Equals, uuid.ToString())
+                .Get();
+
+            return resp.Models.FirstOrDefault();
+        }
     }
 }

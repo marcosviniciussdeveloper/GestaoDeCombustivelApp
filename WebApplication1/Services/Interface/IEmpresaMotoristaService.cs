@@ -1,5 +1,7 @@
-﻿// Services/Interfaces/IEmpresaMotoristaService.cs
-using WebApplication1.Models.View; // VwMotoristaEmpresa
+﻿
+
+using WebApplication1.Models.View;
+
 public interface IEmpresaMotoristaService
 {
     Task VincularAsync(Guid empresaId, Guid motoristaUsuarioId, string status = "ativo");

@@ -7,8 +7,7 @@ using static DashboardDto;
 
 namespace WebApplication1.Services
 {
-    // Mantido apenas porque seu Program faz Configure<SupabaseSettings>,
-    // mas o Service NÃO usa mais ApiKey/Url (isso fica no Program).
+
     public class SupabaseSettings
     {
         public string Url { get; set; } = string.Empty;
@@ -149,7 +148,7 @@ namespace WebApplication1.Services
                 ManutencaoAnual   = CountIn(manutencoes, inicioAno,    now),
 
                 VeiculosTotal    = veiculos?.Count ?? 0,
-                VeiculosAtivos   = veiculos?.Count ?? 0, // ajuste quando tiver coluna de status
+                VeiculosAtivos   = veiculos?.Count ?? 0, 
                 VeiculosInativos = 0,
 
                 MotoristasAtivos = motoristas?.Count ?? 0

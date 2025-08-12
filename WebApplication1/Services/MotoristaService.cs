@@ -5,6 +5,7 @@ using Meucombustivel.Services.Interfaces;
 using AutoMapper;
 using Meucombustivel.Dtos.Usuario;
 using Meucombustivel.Exceptions;
+using Microsoft.AspNetCore.Razor.Hosting;
 
 namespace Meucombustivel.Services
 {
@@ -13,14 +14,16 @@ namespace Meucombustivel.Services
         private readonly IMotoristaRepository _motoristaRepository;
         private readonly IMapper _mapper;
         private readonly IUsuarioService _usuarioService;
+        private readonly IEmpresaRepository _empresaRepository;
         private readonly IUsuarioRepository _usuarioRepository;
 
-        public MotoristaService(IMotoristaRepository motoristaRepository, IMapper mapper, IUsuarioRepository usuarioRepository, IUsuarioService usuarioService)
+        public MotoristaService(IEmpresaRepository empresaRepository, IMotoristaRepository motoristaRepository, IMapper mapper, IUsuarioRepository usuarioRepository, IUsuarioService usuarioService)
         {
             _motoristaRepository = motoristaRepository;
             _mapper = mapper;
             _usuarioRepository = usuarioRepository;
             _usuarioService = usuarioService;
+            _empresaRepository = empresaRepository;
         }
 
         public async Task<Guid> CreateAsync(Guid usuarioId, CreateMotoristaDto dto)
@@ -85,11 +88,11 @@ namespace Meucombustivel.Services
 
         public async Task<IEnumerable<ReadMotoristaDto>> GetAllByEmpresaAsync(Guid empresaId)
         {
-            var empresa = await _usuarioRepository.GetByIdAsync(empresaId);
+            var empresa = await _empresaRepository.GetByIdAsync(empresaId)
+              ?? await _empresaRepository.GetByUuidAsync(empresaId);
+
             if (empresa == null)
-            {
                 throw new NotFoundException($"Empresa com ID {empresaId} não encontrada.");
-            }
 
             var motoristas = await _motoristaRepository.GetAllAsync();
             var motoristaDtos = new List<ReadMotoristaDto>();
@@ -97,7 +100,9 @@ namespace Meucombustivel.Services
             foreach (var motorista in motoristas)
             {
                 var usuario = await _usuarioRepository.GetByIdAsync(motorista.UsuarioId);
-                if (usuario != null && usuario.EmpresaId == empresaId)
+
+              
+                if (usuario != null && usuario.EmpresaId == empresa.Id)
                 {
                     var motoristaDto = _mapper.Map<ReadMotoristaDto>(motorista);
                     motoristaDto.Nome = usuario.Nome;
@@ -106,6 +111,7 @@ namespace Meucombustivel.Services
                     motoristaDtos.Add(motoristaDto);
                 }
             }
+
             return motoristaDtos;
         }
 

@@ -1,11 +1,12 @@
-﻿// Services/EmpresaMotoristaService.cs
+﻿
+using WebApplication1.Models.View;
 using WebApplication1.Repositories.Interfaces;
-using WebApplication1.Models.View; // VwMotoristaEmpresa
+using static Supabase.Postgrest.Constants;
 
 public class EmpresaMotoristaService : IEmpresaMotoristaService
 {
     private readonly IEmpresaMotoristaRepository _repo;
-    private readonly Supabase.Client _supabase; 
+    private readonly Supabase.Client _supabase;
 
     public EmpresaMotoristaService(IEmpresaMotoristaRepository repo, Supabase.Client supabase)
     {
@@ -15,7 +16,6 @@ public class EmpresaMotoristaService : IEmpresaMotoristaService
 
     public async Task VincularAsync(Guid empresaId, Guid motoristaUsuarioId, string status = "ativo")
     {
-        // idempotência
         if (await _repo.ExisteVinculoAsync(empresaId, motoristaUsuarioId)) return;
         await _repo.VincularAsync(empresaId, motoristaUsuarioId, status);
     }
@@ -35,12 +35,13 @@ public class EmpresaMotoristaService : IEmpresaMotoristaService
     public Task<IReadOnlyList<Guid>> ListarEmpresasIdsPorMotoristaAsync(Guid motoristaUsuarioId)
         => _repo.ListarEmpresasIdsPorMotoristaAsync(motoristaUsuarioId);
 
-
     public async Task<IReadOnlyList<VwMotoristaEmpresa>> ListarMotoristasDaEmpresaAsync(Guid empresaId)
     {
-        var resp = await _supabase.From<VwMotoristaEmpresa>()
-                                  .Where(v => v.EmpresaId == empresaId)
-                                  .Get();
+        var resp = await _supabase
+            .From<VwMotoristaEmpresa>()
+            .Where(v => v.EmpresaId = = empresaId)
+            .Get();
+
         return resp.Models;
     }
 }

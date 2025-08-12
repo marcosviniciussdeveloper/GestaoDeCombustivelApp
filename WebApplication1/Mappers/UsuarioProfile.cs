@@ -6,14 +6,17 @@ public class UsuarioProfile : Profile
 {
     public UsuarioProfile()
     {
+        // Create
         CreateMap<CreateUsuarioDto, Usuarios>()
-            .ForMember(dest => dest.TipoUsuario, opt => opt.MapFrom(src => src.TipoUsuario))
-            .ForMember(dest => dest.Id, opt => opt.Ignore())
-         
-            .ForMember(dest => dest.IdAuth, opt => opt.Ignore());
+            .ForMember(d => d.TipoUsuario, o => o.MapFrom(s =>
+                string.IsNullOrWhiteSpace(s.TipoUsuario) ? "usuario" : s.TipoUsuario))
+          
+            .ForMember(d => d.Id, o => o.Ignore())
+            .ForMember(d => d.IdAuth, o => o.Ignore());
 
+       
         CreateMap<UpdateUsuarioDto, Usuarios>()
-            .ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            .ForAllMembers(o => o.Condition((src, dest, srcMember) => srcMember != null));
 
         CreateMap<Usuarios, ReadUsuarioDto>().ReverseMap();
     }
