@@ -88,8 +88,8 @@ namespace Meucombustivel.Services
 
         public async Task<IEnumerable<ReadMotoristaDto>> GetAllByEmpresaAsync(Guid empresaId)
         {
-            var empresa = await _empresaRepository.GetByIdAsync(empresaId)
-              ?? await _empresaRepository.GetByUuidAsync(empresaId);
+            var empresa = await _empresaRepository.GetByIdAsync(empresaId);
+
 
             if (empresa == null)
                 throw new NotFoundException($"Empresa com ID {empresaId} não encontrada.");
@@ -101,7 +101,7 @@ namespace Meucombustivel.Services
             {
                 var usuario = await _usuarioRepository.GetByIdAsync(motorista.UsuarioId);
 
-              
+
                 if (usuario != null && usuario.EmpresaId == empresa.Id)
                 {
                     var motoristaDto = _mapper.Map<ReadMotoristaDto>(motorista);
@@ -141,19 +141,36 @@ namespace Meucombustivel.Services
 
 
 
+        public async Task<ReadMotoristaDto?> GetByUsuarioIdAsync(Guid usuarioId)
+        {
+            var motorista = await _motoristaRepository.GetByUsuarioIdAsync(usuarioId);
+            if (motorista == null) return null;
+
+            var dto = _mapper.Map<ReadMotoristaDto>(motorista);
+
+           
+            var usuario = await _usuarioRepository.GetByIdAsync(motorista.UsuarioId);
+            if (usuario != null)
+            {
+                dto.Nome = usuario.Nome;
+                dto.Email = usuario.Email;
+                dto.Cpf = usuario.Cpf;
+            }
+
+            return dto;
+        }
+
+
+
         public async Task<Guid> ResgisterNewDriverAsync(RegisterMotoristaDto dto)
         {
             var existingUser = await _usuarioRepository.GetByEmailAsync(dto.Email);
             if (existingUser != null)
-            {
                 throw new BusinessException($"Já existe um usuário com o e-mail {dto.Email}.");
-            }
 
             var existingUserCpf = await _usuarioRepository.GetByCpfAsync(dto.Cpf);
             if (existingUserCpf != null)
-            {
                 throw new BusinessException($"Já existe um usuário com o CPF {dto.Cpf}.");
-            }
 
             var userCreateDto = new CreateUsuarioDto
             {
@@ -167,13 +184,24 @@ namespace Meucombustivel.Services
 
             Guid newUsuarioId = await _usuarioService.CreateAsync(userCreateDto);
 
-            var motoristaProfile = _mapper.Map<Motorista>(dto);
-            motoristaProfile.UsuarioId = newUsuarioId;
 
-            await _motoristaRepository.AddAsync(motoristaProfile);
+            var motorista = _mapper.Map<Motorista>(dto);
+            motorista.UsuarioId = newUsuarioId;
+
+
+            var criado = await _motoristaRepository.AddAsync(motorista);
+
+
+            if (dto.EmpresaId.HasValue && dto.EmpresaId.Value != Guid.Empty)
+            {
+
+            }
+
 
             return newUsuarioId;
         }
+
+
 
         public async Task<bool> UpdateAsync(Guid id, UpdateMotoristaDto dto)
         {

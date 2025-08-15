@@ -7,72 +7,68 @@ using Microsoft.AspNetCore.Mvc;
 namespace Meucombustivel.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    [Authorize] 
+    [Route("api/motorista")]
+    [Produces("application/json")]
     public class MotoristaController : ControllerBase
     {
         private readonly IMotoristaService _motoristaService;
-
-        public MotoristaController(IMotoristaService motoristaService)
-        {
-            _motoristaService = motoristaService;
-        }
+        public MotoristaController(IMotoristaService motoristaService) => _motoristaService = motoristaService;
 
         [HttpPost("registrar")]
-        [Authorize(Roles = UserRoles.Gestor + "," +UserRoles.Administrador  )]
-        public async Task<IActionResult> RegistrarMotorista(Guid usuarioId, [FromBody] CreateMotoristaDto dto)
+        [Authorize(Roles = UserRoles.Gestor + "," + UserRoles.Administrador)]
+        public async Task<IActionResult> RegistrarMotorista([FromQuery] Guid usuarioId, [FromBody] CreateMotoristaDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            Guid motoristaId = await _motoristaService.CreateAsync(usuarioId, dto);
-            return CreatedAtAction(nameof(GetById), new { id = motoristaId }, new { message = "Motorista criado com sucesso!", id = motoristaId });
+            var id = await _motoristaService.CreateAsync(usuarioId, dto);
+            return CreatedAtAction(nameof(GetById), new { id }, new { message = "Motorista criado com sucesso!", id });
         }
 
-        [AllowAnonymous] 
-        [HttpPost("Registrar Sem empresa")]
+        [AllowAnonymous]
+        [HttpPost("registrar-sem-empresa")]
         public async Task<IActionResult> RegistrarMotoristaSemEmpresa([FromBody] RegisterMotoristaDto dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            Guid motoristaId = await _motoristaService.ResgisterNewDriverAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = motoristaId }, new { message = "Motorista criado com sucesso!", id = motoristaId });
+            var usuarioId = await _motoristaService.ResgisterNewDriverAsync(dto);
+            return CreatedAtAction(nameof(GetByUsuarioId), new { usuarioId }, new { message = "Motorista criado com sucesso!", id = usuarioId });
         }
 
-        [HttpGet("Buscar varios")]
-        [Authorize(Roles = UserRoles.Administrador + "," + UserRoles.Gestor)]
-        public async Task<ActionResult<IEnumerable<ReadMotoristaDto>>> GetAllByEmpresaAsync(Guid empresaId)
+        [HttpGet("buscar-varios")]
+        public async Task<ActionResult<IEnumerable<ReadMotoristaDto>>> GetAllByEmpresaAsync([FromQuery] Guid empresaId)
         {
-            var motoristas = await _motoristaService.GetAllByEmpresaAsync(empresaId);
-            return Ok(motoristas);
+            if (empresaId == Guid.Empty)
+                return BadRequest(new { error = "O parâmetro empresaId é obrigatório." });
+
+            var dtos = await _motoristaService.GetAllByEmpresaAsync(empresaId);
+            return Ok(dtos);
         }
 
-        [HttpGet("Buscar apenas um")]
-        public async Task<ActionResult<ReadMotoristaDto>> GetById(Guid id)
-        {
-            var motorista = await _motoristaService.GetByIdAsync(id);
-            if (motorista == null)
-                return NotFound(new { message = "Motorista não encontrado." });
 
-            return Ok(motorista);
+        [HttpGet("buscar/{id:guid}")]
+        public async Task<ActionResult<ReadMotoristaDto>> GetById([FromRoute] Guid id)
+        {
+            var m = await _motoristaService.GetByIdAsync(id);
+            if (m == null) return NotFound(new { message = "Motorista não encontrado." });
+            return Ok(m);
         }
 
-        [HttpPut("atualizar/{id}")]
-        public async Task<IActionResult> UpdateMotorista(Guid id, [FromBody] UpdateMotoristaDto dto)
+        [HttpGet("buscar-por-usuario/{usuarioId:guid}")]
+        public async Task<ActionResult<ReadMotoristaDto>> GetByUsuarioId([FromRoute] Guid usuarioId)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var m = await _motoristaService.GetByUsuarioIdAsync(usuarioId);
+            if (m == null) return NotFound(new { message = "Motorista não encontrado." });
+            return Ok(m);
+        }
 
-            var updated = await _motoristaService.UpdateAsync(id, dto);
-            if (!updated)
-                return NotFound(new { message = "Motorista não encontrado." });
+        [HttpPut("atualizar/{id:guid}")]
+        public async Task<IActionResult> UpdateMotorista([FromRoute] Guid id, [FromBody] UpdateMotoristaDto dto)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var ok = await _motoristaService.UpdateAsync(id, dto);
+            if (!ok) return NotFound(new { message = "Motorista não encontrado." });
             return NoContent();
         }
-
-        
     }
 }
-
-

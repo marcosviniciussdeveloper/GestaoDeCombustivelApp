@@ -121,5 +121,15 @@ namespace WebApplication1.Repositories
 
             return r.Models.Select(x => x.EmpresaId).ToList();
         }
+
+        public async Task<IReadOnlyList<EmpresaMotorista>> ListarVinculosPorEmpresaAsync(Guid empresaId)
+        {
+            var resp = await _supabase
+                .From<EmpresaMotorista>()
+                .Filter("empresa_id", Operator.Equals, empresaId)
+                .Get();
+
+            return resp.Models; 
+        }
     }
 }

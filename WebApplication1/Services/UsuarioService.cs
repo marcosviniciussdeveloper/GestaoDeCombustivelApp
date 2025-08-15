@@ -6,7 +6,7 @@ using Meucombustivel.Repositories.Interfaces;
 using Meucombustivel.Services.Interfaces;
 using WebApplication1.Repositories.Interfaces;
 using WebApplication1.ServicesAuth;
-
+ 
 namespace Meucombustivel.Services
 {
     public class UsuarioService : IUsuarioService
@@ -128,14 +128,15 @@ namespace Meucombustivel.Services
             var jwtToken = _tokenService.GenerateJwtToken(usuarioProfile);
 
             var readUsuarioDto = _mapper.Map<ReadUsuarioDto>(usuarioProfile);
-            var authResponseDto = new AuthResponseDto
+           
+            return new AuthResponseDto 
             {
-                Usuario = readUsuarioDto,
-                AccessToken = jwtToken,
-                RefreshToken = sessionResponse.RefreshToken
+                Token = jwtToken,
+                User = readUsuarioDto
+          
             };
 
-            return authResponseDto;
+        
         }
     }
 }

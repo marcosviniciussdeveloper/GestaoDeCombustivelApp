@@ -23,5 +23,7 @@ namespace WebApplication1.Repositories.Interfaces
         Task<IReadOnlyList<Guid>> ListarMotoristasIdsPorEmpresaAsync(Guid empresaId);
 
         Task<IReadOnlyList<Guid>> ListarEmpresasIdsPorMotoristaAsync(Guid motoristaUsuarioId);
+
+        Task<IReadOnlyList<EmpresaMotorista>> ListarVinculosPorEmpresaAsync(Guid empresaId);
     }
 }

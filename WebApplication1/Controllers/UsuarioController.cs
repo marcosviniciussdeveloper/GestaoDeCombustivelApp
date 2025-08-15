@@ -32,27 +32,28 @@ namespace Meucombustivel.Controllers
             return CreatedAtAction(nameof(GetById), new { id = usuarioId }, new { id = usuarioId, message = "Usuário registrado com sucesso." });
         }
 
+        
         [HttpPost("autenticar")]
-        [AllowAnonymous]
-        public async Task<IActionResult> AutenticarUsuario([FromBody] LoginDto loginDto)
+        [Produces("application/json")]
+        public async Task<IActionResult> AutenticarUsuario([FromBody] LoginDto login)
         {
-            if (!ModelState.IsValid)
+            var result = await _usuarioService.AuthenticateAsync(login.Email, login.Senha);
+            if (result is null) return Unauthorized(new { error = "Credenciais inválidas." });
+
+            return Ok(new
             {
-                return BadRequest(ModelState);
-            }
-
-            var authResponseDto = await _usuarioService.AuthenticateAsync(loginDto.Email, loginDto.Senha); 
-            if (authResponseDto == null)
-
-            {
-                
-                throw new UnauthorizedException("Credenciais inválidas.");
-            }
-
-
-
-            return Ok(authResponseDto);
+                token = result.Token,
+                user = new
+                {
+                    id = result.User.Id,
+                    nome = result.User.Nome,
+                    email = result.User.Email,
+                    role = result.User.TipoUsuario,     
+                    empresaId = result.User.EmpresaId  
+                }
+            });
         }
+
 
         [HttpGet("{id}")]
         [Authorize (Roles = UserRoles.Administrador + "," + UserRoles.Gestor + "," + UserRoles.Motorista)]

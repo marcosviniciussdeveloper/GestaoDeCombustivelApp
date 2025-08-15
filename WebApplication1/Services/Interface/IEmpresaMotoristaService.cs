@@ -1,6 +1,5 @@
-﻿
-
-using WebApplication1.Models.View;
+﻿using Meucombustivel.Dtos.Motorista;
+using WebApplication1.Models;
 
 public interface IEmpresaMotoristaService
 {
@@ -10,5 +9,7 @@ public interface IEmpresaMotoristaService
     Task<bool> ExisteVinculoAsync(Guid empresaId, Guid motoristaUsuarioId);
     Task<IReadOnlyList<Guid>> ListarMotoristasIdsPorEmpresaAsync(Guid empresaId);
     Task<IReadOnlyList<Guid>> ListarEmpresasIdsPorMotoristaAsync(Guid motoristaUsuarioId);
-    Task<IReadOnlyList<VwMotoristaEmpresa>> ListarMotoristasDaEmpresaAsync(Guid empresaId);
+    Task<EmpresaMotorista?> ObterAsync(Guid empresaId, Guid motoristaUsuarioId);
+
+    Task<IReadOnlyList<ReadMotoristaDto>> ListarMotoristasDaEmpresaAsync(Guid empresaId);
 }

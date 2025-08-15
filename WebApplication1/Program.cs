@@ -28,7 +28,7 @@ var supabaseUrl       = builder.Configuration["Supabase:Url"]             ?? thr
 var supabaseAnonKey   = builder.Configuration["Supabase:AnonKey"]         ?? throw new InvalidOperationException("Supabase:AnonKey is not configured.");
 var supabaseServiceKey= builder.Configuration["Supabase:ServiceRoleKey"]  ?? throw new InvalidOperationException("Supabase:ServiceRoleKey is not configured.");
 
-builder.Services.AddSingleton(_ =>
+builder.Services.AddSingleton(_=>
     new Supabase.Client(
         supabaseUrl,
         supabaseServiceKey,

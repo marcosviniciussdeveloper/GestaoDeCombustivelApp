@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
 using Meucombustivel.Dtos.Motorista;
 using Meucombustivel.Models;
-using AutoMapper;
-using Meucombustivel.Dtos.Motorista;
-using Meucombustivel.Models;
 
 namespace Meucombustivel.Mappers
 {
