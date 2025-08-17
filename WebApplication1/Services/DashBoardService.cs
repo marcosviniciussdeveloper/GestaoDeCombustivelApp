@@ -18,7 +18,7 @@ namespace WebApplication1.Services
     {
         private readonly HttpClient _http;
 
-        // Agora só injeta o HttpClient; headers e BaseAddress ficam no Program.cs
+    
         public DashboardService(HttpClient http)
         {
             _http = http;
@@ -100,11 +100,10 @@ namespace WebApplication1.Services
         public async Task<DashboardDto> ObterDashboardAsync(
             Guid? empresaId = null, DateTime? de = null, DateTime? ate = null)
         {
-            // Tabelas COM coluna "data"
             var abastecimentos = await FetchAsync("abastecimentos", aplicarFiltroEmpresa: true, aplicarFiltroData: true, empresaId, de, ate);
             var manutencoes    = await FetchAsync("manutencoes",    aplicarFiltroEmpresa: true, aplicarFiltroData: true, empresaId, de, ate);
 
-            // Tabelas SEM coluna "data"
+           
             var veiculos   = await FetchAsync("veiculos",   aplicarFiltroEmpresa: true,  aplicarFiltroData: false, empresaId, de, ate);
             var motoristas = await FetchAsync("motoristas", aplicarFiltroEmpresa: false, aplicarFiltroData: false, empresaId, de, ate);
 
@@ -161,7 +160,7 @@ namespace WebApplication1.Services
         public async Task<List<DashboardMensalDto>> ObterDadosMensaisAsync(
             Guid? empresaId = null, DateOnly? de = null, DateOnly? ate = null)
         {
-            // range padrão: últimos 6 meses (inclui mês atual)
+           
             var hoje = DateOnly.FromDateTime(DateTime.UtcNow.Date);
             var ini = de  ?? new DateOnly(hoje.Year, hoje.Month, 1).AddMonths(-5);
             var fim = ate ?? new DateOnly(hoje.Year, hoje.Month, 1);
@@ -170,14 +169,14 @@ namespace WebApplication1.Services
             var dtIni = ini.ToDateTime(TimeOnly.MinValue);
             var dtFim = fim.ToDateTime(TimeOnly.MaxValue);
 
-            // Abastecimentos têm coluna "data" -> aplicarFiltroData = true
+
             var abastecimentos = await FetchAsync(
                 "abastecimentos",
                 aplicarFiltroEmpresa: true,
                 aplicarFiltroData:   true,
                 empresaId, dtIni, dtFim);
 
-            // cria meses do intervalo com zeros (para o gráfico não quebrar)
+            
             var culturaPtBr = new CultureInfo("pt-BR");
             var meses = new List<DashboardMensalDto>();
             for (var d = new DateOnly(ini.Year, ini.Month, 1);
@@ -193,7 +192,7 @@ namespace WebApplication1.Services
                 });
             }
 
-            // mapa yyyy-MM -> índice
+         
             var primeiro = new DateTime(ini.Year, ini.Month, 1);
             var map = meses
                 .Select((_, i) => new { Key = primeiro.AddMonths(i).ToString("yyyy-MM"), Idx = i })
@@ -201,7 +200,7 @@ namespace WebApplication1.Services
 
             const decimal precoMedioMercado = 6.00m;
 
-            // agrega dados reais
+           
             var grupos = abastecimentos
                 .Select(e => new { Dt = GetDate(e), Litros = GetDecimal(e, "litros"), Custo = GetDecimal(e, "custo") })
                 .Where(x => x.Dt.HasValue && x.Dt.Value >= dtIni && x.Dt.Value <= dtFim)
@@ -220,7 +219,7 @@ namespace WebApplication1.Services
             return meses;
         }
 
-        // (Opcional) overload sem range para compatibilidade
+   
         public async Task<List<DashboardMensalDto>> ObterDadosMensaisAsync(Guid? empresaId = null)
         {
             var hoje = DateOnly.FromDateTime(DateTime.UtcNow.Date);

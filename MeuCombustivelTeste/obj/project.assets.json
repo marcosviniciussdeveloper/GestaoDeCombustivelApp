@@ -8786,23 +8786,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Sindauto\\.nuget\\packages\\": {},
+    "C:\\Users\\mv834\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Sindauto\\Desktop\\MeuCombustivel Copia\\GestaoDeCombustivelApp\\MeuCombustivelTeste\\MeuCombustivelTeste.csproj",
+      "projectUniqueName": "C:\\Users\\mv834\\Desktop\\MeuCombustivelPro\\MeuCombustivelTeste\\MeuCombustivelTeste.csproj",
       "projectName": "MeuCombustivelTeste",
-      "projectPath": "C:\\Users\\Sindauto\\Desktop\\MeuCombustivel Copia\\GestaoDeCombustivelApp\\MeuCombustivelTeste\\MeuCombustivelTeste.csproj",
-      "packagesPath": "C:\\Users\\Sindauto\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Sindauto\\Desktop\\MeuCombustivel Copia\\GestaoDeCombustivelApp\\MeuCombustivelTeste\\obj\\",
+      "projectPath": "C:\\Users\\mv834\\Desktop\\MeuCombustivelPro\\MeuCombustivelTeste\\MeuCombustivelTeste.csproj",
+      "packagesPath": "C:\\Users\\mv834\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\mv834\\Desktop\\MeuCombustivelPro\\MeuCombustivelTeste\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\Sindauto\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\mv834\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -8818,8 +8818,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "C:\\Users\\Sindauto\\Desktop\\MeuCombustivel Copia\\GestaoDeCombustivelApp\\WebApplication1\\WebApplication1.csproj": {
-              "projectPath": "C:\\Users\\Sindauto\\Desktop\\MeuCombustivel Copia\\GestaoDeCombustivelApp\\WebApplication1\\WebApplication1.csproj"
+            "C:\\Users\\mv834\\Desktop\\MeuCombustivelPro\\WebApplication1\\WebApplication1.csproj": {
+              "projectPath": "C:\\Users\\mv834\\Desktop\\MeuCombustivelPro\\WebApplication1\\WebApplication1.csproj"
             }
           }
         }
@@ -8883,7 +8883,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.303/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

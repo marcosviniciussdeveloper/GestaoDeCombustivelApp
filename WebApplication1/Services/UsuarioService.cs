@@ -128,12 +128,15 @@ namespace Meucombustivel.Services
             var jwtToken = _tokenService.GenerateJwtToken(usuarioProfile);
 
             var readUsuarioDto = _mapper.Map<ReadUsuarioDto>(usuarioProfile);
+            
            
+
             return new AuthResponseDto 
             {
                 Token = jwtToken,
-                User = readUsuarioDto
-          
+                User = readUsuarioDto,
+                //EmpresaId = usuarioProfile.EmpresaId ?? Guid.Empty
+
             };
 
         

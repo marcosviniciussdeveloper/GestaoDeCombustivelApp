@@ -11,7 +11,7 @@ namespace Meucombustivel.Repositories
     {
         private readonly Supabase.Client _supabaseClient;
 
-        public UsuarioRepository(Supabase.Client supabaseClient) 
+        public UsuarioRepository(Supabase.Client supabaseClient)
         {
             _supabaseClient = supabaseClient;
         }
@@ -24,7 +24,7 @@ namespace Meucombustivel.Repositories
                     Returning = Supabase.Postgrest.QueryOptions.ReturnType.Representation
                 });
 
-            return response.Models.First(); 
+            return response.Models.First();
         }
 
         public async Task DeleteAsync(Guid id)
@@ -59,8 +59,11 @@ namespace Meucombustivel.Repositories
         {
             var response = await _supabaseClient.From<Usuarios>()
                                                  .Where(u => u.Email == email)
-                                                 .Get();
-            return response.Models.FirstOrDefault();
+                                                   .Get();
+
+            var usuario = response.Models.FirstOrDefault();
+
+            return usuario;
         }
 
         public async Task<Usuarios?> GetByCpfAsync(string cpf)
@@ -68,10 +71,15 @@ namespace Meucombustivel.Repositories
             var response = await _supabaseClient.From<Usuarios>()
                                                  .Where(u => u.Cpf == cpf)
                                                  .Get();
+
+            cpf = new string(cpf.Where(char.IsDigit).ToArray());
+
             if (response.Models.Count == 0)
             {
                 return null;
             }
+
+
 
             if (response.Models.Count > 1)
             {
