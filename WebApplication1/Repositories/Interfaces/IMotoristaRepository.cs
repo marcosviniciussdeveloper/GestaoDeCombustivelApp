@@ -17,7 +17,9 @@ namespace Meucombustivel.Repositories.Interfaces
         /// </summary>
         /// <param name="usuarioId">O ID do usuário associado ao motorista.</param>
         /// <returns>O objeto Motorista encontrado ou null se não existir.</returns>
-        Task<Motorista?> GetByUsuarioIdAsync(Guid usuarioId);
+      
+
+        Task <Motorista> StatusMotoristaAsync(Guid usuarioId, bool novoStatus);
 
         Task<IReadOnlyList<ReadMotoristaDto>> ListarPorEmpresaAsync(Guid empresaId);
 

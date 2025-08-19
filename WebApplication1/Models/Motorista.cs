@@ -1,7 +1,5 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-using ColumnAttribute = Supabase.Postgrest.Attributes.ColumnAttribute;
-
 
 namespace Meucombustivel.Models;
     [Table("motoristas")]
@@ -16,6 +14,9 @@ namespace Meucombustivel.Models;
 
     [Column("categoria_cnh")]
     public string CategoriaCnh { get; set; }
+
+    [Column("status")]
+    public bool? Status {get;set;}
 
     [Column("validade_cnh")]
     public DateTime ValidadeCnh { get; set; }

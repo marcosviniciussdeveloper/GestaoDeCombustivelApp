@@ -1,8 +1,10 @@
 ﻿using Meucombustivel.Constants;
 using Meucombustivel.Dtos.Motorista;
+using Meucombustivel.Models;
 using Meucombustivel.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static Meucombustivel.Dtos.Motorista.ReadMotoristaDto;
 
 namespace Meucombustivel.Controllers
 {
@@ -20,7 +22,7 @@ namespace Meucombustivel.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var id = await _motoristaService.CreateAsync(usuarioId, dto);
+            var id = await _motoristaService.CreateAsync(usuarioId,  dto );
             return CreatedAtAction(nameof(GetById), new { id }, new { message = "Motorista criado com sucesso!", id });
         }
 
@@ -32,6 +34,15 @@ namespace Meucombustivel.Controllers
 
             var usuarioId = await _motoristaService.ResgisterNewDriverAsync(dto);
             return CreatedAtAction(nameof(GetByUsuarioId), new { usuarioId }, new { message = "Motorista criado com sucesso!", id = usuarioId });
+        }
+
+        [HttpPatch("{usuarioId}/status")]
+        public async Task<IActionResult> AtualizarStatus(Guid usuarioId, [FromBody] AtualizarStatusDto dto)
+        {
+            await _motoristaService.UpdateStatusAsync(usuarioId, dto.Status);
+
+         
+            return Ok (new{ message =  "Status Atualizado com sucesso"});
         }
 
         [HttpGet("buscar-varios")]

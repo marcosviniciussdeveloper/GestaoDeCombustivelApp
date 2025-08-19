@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Meucombustivel.Dtos.Motorista;
 using Meucombustivel.Models;
+using static Meucombustivel.Dtos.Motorista.ReadMotoristaDto;
 
 namespace Meucombustivel.Mappers
 {
@@ -19,7 +20,7 @@ namespace Meucombustivel.Mappers
                 .ForMember(d => d.Nome,         o => o.Ignore()) 
                 .ForMember(d => d.Email,        o => o.Ignore())  
                 .ForMember(d => d.Cpf,          o => o.Ignore())  
-                .ForMember(d => d.StatusVinculo,o => o.Ignore()); 
+                .ForMember(d => d.Status,o => o.Ignore()); 
          
             CreateMap<RegisterMotoristaDto, Motorista>()
                 .ForMember(d => d.UsuarioId,    o => o.Ignore())

@@ -6,6 +6,7 @@ using AutoMapper;
 using Meucombustivel.Dtos.Usuario;
 using Meucombustivel.Exceptions;
 using Microsoft.AspNetCore.Razor.Hosting;
+using static Meucombustivel.Dtos.Motorista.ReadMotoristaDto;
 
 namespace Meucombustivel.Services
 {
@@ -26,7 +27,7 @@ namespace Meucombustivel.Services
             _empresaRepository = empresaRepository;
         }
 
-        public async Task<Guid> CreateAsync(Guid usuarioId, CreateMotoristaDto dto)
+        public async Task<Guid> CreateAsync(Guid usuarioId, CreateMotoristaDto dto )
         {
             var existingUser = await _usuarioRepository.GetByIdAsync(usuarioId);
             if (existingUser == null)
@@ -34,11 +35,13 @@ namespace Meucombustivel.Services
                 throw new NotFoundException($"Usuário com ID {usuarioId} não encontrado. Não é possível criar perfil de motorista.");
             }
 
-            var existingMotoristaProfile = await _motoristaRepository.GetByUsuarioIdAsync(usuarioId);
+            var existingMotoristaProfile = await _motoristaRepository.GetByIdAsync(usuarioId);
             if (existingMotoristaProfile != null)
             {
                 throw new BusinessException($"O usuário com ID {usuarioId} já possui um perfil de motorista.");
             }
+
+             var status =  await _motoristaRepository.StatusMotoristaAsync(usuarioId, dto.Status);
 
             var motorista = _mapper.Map<Motorista>(dto);
             motorista.UsuarioId = usuarioId;
@@ -143,7 +146,7 @@ namespace Meucombustivel.Services
 
         public async Task<ReadMotoristaDto?> GetByUsuarioIdAsync(Guid usuarioId)
         {
-            var motorista = await _motoristaRepository.GetByUsuarioIdAsync(usuarioId);
+            var motorista = await _motoristaRepository.GetByIdAsync(usuarioId);
             if (motorista == null) return null;
 
             var dto = _mapper.Map<ReadMotoristaDto>(motorista);
@@ -216,6 +219,15 @@ namespace Meucombustivel.Services
                 Nome = dto.Nome,
                 Cpf = dto.Cpf,
                 Email = dto.Email,
+                
+            };
+
+            var userUpdateMotoristaDto = new UpdateMotoristaDto
+            {
+                NumeroCnh = dto.NumeroCnh,
+                ValidadeCnh = dto.ValidadeCnh,
+                CategoriaCnh = dto.CategoriaCnh,
+                Status = dto.Status
             };
 
             await _usuarioService.UpdateAsync(id, userUpdateDto);
@@ -224,5 +236,12 @@ namespace Meucombustivel.Services
             await _motoristaRepository.UpdateAsync(existingMotoristaProfile);
             return true;
         }
+
+        public async Task<Motorista> UpdateStatusAsync(Guid usuarioId, bool novoStatus)
+        {
+            return await  _motoristaRepository.StatusMotoristaAsync(usuarioId, novoStatus);
+        }
+
+      
     }
 }

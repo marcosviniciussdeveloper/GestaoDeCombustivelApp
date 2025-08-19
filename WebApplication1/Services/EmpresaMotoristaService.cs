@@ -65,17 +65,17 @@ public class EmpresaMotoristaService : IEmpresaMotoristaService
             if (v == null || v.MotoristaUsuarioId == Guid.Empty) continue;
 
             var usuario = await _usuarioRepository.GetByIdAsync(v.MotoristaUsuarioId);
-            var motorista = await _motoristaRepository.GetByUsuarioIdAsync(v.MotoristaUsuarioId);
+            var motorista = await _motoristaRepository.GetByIdAsync(v.MotoristaUsuarioId);
             if (usuario == null || motorista == null) continue;
 
             dtos.Add(new ReadMotoristaDto
             {
-                MotoristaId = v.MotoristaUsuarioId,
+                MotoristaId = usuario.Id,
                 Nome = usuario.Nome,
                 Email = usuario.Email,
                 Cpf = usuario.Cpf,
                 NumeroCnh = motorista.NumeroCnh,
-                ValidadeCnh = motorista.ValidadeCnh,
+                Datetime = motorista.ValidadeCnh,
                 CategoriaCnh = motorista.CategoriaCnh
             });
         }

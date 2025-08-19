@@ -55,10 +55,12 @@ namespace Meucombustivel.Repositories
 
         public async Task<Motorista?> GetByIdAsync(Guid id)
         {
-            var response = await _supabaseClient.From<Motorista>()
-                                                 .Where(m => m.UsuarioId == id)
-                                                 .Get();
-            return response.Models.FirstOrDefault();
+            var resp = await _supabaseClient
+       .From<Motorista>()
+       .Where(m => m.UsuarioId == id)   
+       .Get();
+
+            return resp.Models.FirstOrDefault();
         }
 
         public async Task UpdateAsync(Motorista entity)
@@ -68,34 +70,48 @@ namespace Meucombustivel.Repositories
                                  .Update(entity);
         }
 
-        public async Task<Motorista?> GetByUsuarioIdAsync(Guid usuarioId)
-        {
-            var response = await _supabaseClient.From<Motorista>()
-                                                 .Where(m => m.UsuarioId == usuarioId)
-                                                 .Get();
-            return response.Models.FirstOrDefault();
-        }
 
         public async Task<IReadOnlyList<ReadMotoristaDto>> ListarPorEmpresaAsync(Guid empresaId)
         {
             var resp = await _supabaseClient
                 .From<VwMotoristaEmpresa>()
                 .Where(v => v.EmpresaId == empresaId)
+
                 .Order(v => v.Nome!, Supabase.Postgrest.Constants.Ordering.Ascending)
                 .Get();
 
             return resp.Models.Select(v => new ReadMotoristaDto
             {
+
                 MotoristaId = v.MotoristaId,
                 Nome = v.Nome,
-                Email = v.Email,
-                Cpf = v.Cpf,
                 NumeroCnh = v.NumeroCnh,
-                ValidadeCnh = v.ValidadeCnh,
                 CategoriaCnh = v.CategoriaCnh,
-                StatusVinculo = v.Status ?? "ativo"
-            }).ToList();
-        }
+                Datetime = v.ValidadeCnh
 
+
+
+
+            }            ).ToList();
+        }
+        
+
+
+        public async Task<Motorista> StatusMotoristaAsync(Guid usuarioId, bool novoStatus)
+        {
+            var resp = await _supabaseClient
+                .From<Motorista>()
+                .Where(m => m.UsuarioId == usuarioId)   
+                .Set(m => m.Status, novoStatus)
+                .Update();
+
+            var atualizado = resp.Models.FirstOrDefault();
+            if (atualizado is null)
+                throw new KeyNotFoundException($"Motorista com usuario_id {usuarioId} não encontrado ou sem permissão para atualizar.");
+
+            atualizado.Status = novoStatus;
+
+            return atualizado;
+        }
     }
 }
